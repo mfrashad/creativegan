@@ -4,7 +4,7 @@ do
                        --model_path "./models/stylegan2_bike.pt" \
                        --seg_model_path './models/segmentation_bike.pt' \
                        --seg_channels 0,3 \
-                       --data_path './datasets/test_data' \
+                       --data_path './datasets/biked' \
                        --copy_id $frame \
                        --paste_id 7 \
                        --context_ids 7-12 \
@@ -17,7 +17,7 @@ do
                        --model_path "./models/stylegan2_bike.pt" \
                        --seg_model_path './models/segmentation_bike.pt' \
                        --seg_channels 3 \
-                       --data_path './datasets/test_data' \
+                       --data_path './datasets/biked' \
                        --copy_id $handle \
                        --paste_id 7 \
                        --context_ids 7-12 \
