@@ -25,3 +25,6 @@ node_modules/
 .__*
 .*.swp
 sftp-config.json
+anomaly_cache/
+rewriting_masks/
+rewriting_results/
