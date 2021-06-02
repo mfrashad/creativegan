@@ -1,5 +1,5 @@
 # CreativeGAN
-Experiment code associated with the paper Experiment code associated with the paper [CreativeGAN: Editing Generative Adversarial Networks for Creative Design Synthesis](https://arxiv.org/abs/2103.06242)
+Experiment code associated with the paper [CreativeGAN: Editing Generative Adversarial Networks for Creative Design Synthesis](https://arxiv.org/abs/2103.06242)
 
 <img src="images/creativegan_overview.PNG" alt="Logo" width="600">
 
