@@ -1,0 +1,24 @@
+name: renv
+channels:
+  - pytorch
+  - ostrokach-forge
+  - conda-forge
+dependencies:
+  - python=3.6
+  - cudatoolkit=10.2
+  - pytorch=1.5.1
+  - torchvision
+  - numpy
+  - scipy
+  - scikit-learn
+  - scikit-image
+  - matplotlib
+  - seaborn
+  - numba
+  - opencv
+  - jupyter
+  - jupyterlab
+  - pyyaml
+  - tqdm
+  - pytorch-msssim
+  - pip
