@@ -5,6 +5,7 @@ mkdir models
 cd models
 wget "https://www.dropbox.com/s/yus207vi8t83d6z/segmentation_bike.pt" -q -O segmentation_bike.pt
 wget "https://www.dropbox.com/s/uxgelj4f50hqq2h/stylegan2_bike.pt" -q -O stylegan2_bike.pt
+cd ..
 
 # Download dataset
 mkdir datasets
