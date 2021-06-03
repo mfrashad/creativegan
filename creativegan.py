@@ -3,7 +3,7 @@ import re
 
 from utils import zdataset, show, labwidget, renormalize
 from rewrite import ganrewrite, rewriteapp
-import torch, copy, os, json
+import torch, copy, os, json, shutil
 from torchvision.utils import save_image
 from torchvision import transforms
 import utils.stylegan2, utils.proggan
@@ -32,28 +32,31 @@ def _parse_num_range(s):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', type=str, required=True)
-parser.add_argument('--model_path', type=str, required=True)
-parser.add_argument('--model_size', type=int, default=512)
-parser.add_argument('--truncation', type=float, default=0.5)
+parser.add_argument('--name', type=str, required=True, 'Name of experiment')
+parser.add_argument('--model_path', type=str, required=True, path='Path to Stylegan model')
+parser.add_argument('--model_size', type=int, default=512, 'GAN model output size')
+parser.add_argument('--truncation', type=float, default=0.5, help="Value for truncation trick in Stylegan")
 
-parser.add_argument('--seg_model_path', type=str, required=True)
+parser.add_argument('--seg_model_path', type=str, required=True, help="Path to segmentation model")
 parser.add_argument('--seg_total_class', type=int, default=7, help="Total class/channel in segmentation model")
 parser.add_argument('--seg_channels', type=_parse_num_range, required=True, help="List of segmentation channel that will be considered for rewriting")
 
-parser.add_argument('--data_path', type=str, required=True)
-parser.add_argument('--k', type=int, default=50)
-parser.add_argument('--anomaly_threshold', type=int, default=3.5)
+parser.add_argument('--data_path', type=str, required=True, help='Path to dataset, the folder should directly contain the images')
+parser.add_argument('--k', type=int, default=50, help='topk value for anomaly detection')
+parser.add_argument('--anomaly_threshold', type=int, default=3.5, help='Threshold for novelty segmentation')
 
-parser.add_argument('--copy_id', type=int, required=True)
-parser.add_argument('--paste_id', type=int, required=True)
+parser.add_argument('--copy_id', type=int, required=True, help='Seed id for target copy')
+parser.add_argument('--paste_id', type=int, required=True, help='Seed id for target paste')
 parser.add_argument('--context_ids', type=_parse_num_range, help='List of context ids', required=True)
-parser.add_argument('--layernum', type=int, required=True)
-parser.add_argument('--rank', type=int, default=30)
-parser.add_argument('--lr', type=float, default=0.05)
-parser.add_argument('--niter', type=float, default=2000)
+parser.add_argument('--layernum', type=int, required=True, help='layer to be edited')
+parser.add_argument('--rank', type=int, default=30, help='rank used in rewriting')
+parser.add_argument('--lr', type=float, default=0.05, help='learning rate in rewriting')
+parser.add_argument('--niter', type=float, default=2000, help='number of iterations in rewriting')
 
 parser.add_argument('--n_outputs', type=int, default=9, help='Number of outputs to display')
+
+parser.add_argument('--ssim', action='store_true', help="calculate ssim of modified model")
+parser.add_argument('--novelty_score', action='store_true', help="calculate average novelty score of modified model")
 
 
 args = parser.parse_args()
@@ -67,7 +70,7 @@ name=args.name
 seg_model_path = args.seg_model_path
 
 data_path = args.data_path
-k=args.k,
+k=args.k
 anomaly_threshold = args.anomaly_threshold
 n_outputs = args.n_outputs
 
@@ -202,7 +205,7 @@ if __name__ == '__main__':
     interface = rewriteapp.GanRewriteApp(gw, size=256, mask_dir=savedir, num_canvases=32)
 
     # Create detector instance given a directory of the normal images
-    ad = anomaly.AnomalyDetector(data_path, name=name, topk=50)
+    ad = anomaly.AnomalyDetector(data_path, name=name, topk=k)
 
     # Extract and cache embeddings of the normal images
     ad.load_train_features()
@@ -353,3 +356,55 @@ if __name__ == '__main__':
 
     with open(os.path.join(mask_savedir, '%s.json' % name), 'w') as f:
         json.dump(data, f, indent=1, default=convert)
+
+    
+    if args.ssim:
+        modified_dir = 'generated/modified'
+        if os.path.exists(modified_dir):
+            shutil.rmtree(modified_dir)
+        os.makedirs(modified_dir)
+
+        gw.model.load_state_dict(saved_state_dict)
+        edited_images = gw.render_image_batch(list(range(100)))
+        for i, im in enumerate(edited_images):
+            filename = f'{i}.png'
+            filename = os.path.join(modified_dir, filename)
+            im.save(filename)
+        
+        from torch.utils.data import DataLoader
+        
+        # SSIM NOVELTY
+        batch_size = 500
+        gen_dataset1 = anomaly.NormalDataset(modified_dir, n=100, grayscale=False, normalize=False, resize=224, cropsize=224)
+        gen_dataset2 = anomaly.NormalDataset(data_path, grayscale=False, normalize=False, resize=224, cropsize=224)
+        gen_loader1 = DataLoader(gen_dataset1, batch_size=1, pin_memory=True)
+        gen_loader2 = DataLoader(gen_dataset2, batch_size=batch_size, pin_memory=True)
+        n = len(gen_dataset1)
+        m = len(gen_dataset2)
+        ssim_mat = torch.zeros((n, m))
+    
+        for i, xb in enumerate(gen_loader1):
+            x = xb.repeat(batch_size, 1, 1, 1)
+            for j, y in enumerate(gen_loader2):
+                if len(y) < batch_size:
+                    x = xb.repeat(len(y), 1, 1, 1)
+                ssim_mat[i][j*batch_size:j*batch_size+len(y)] = (1 - ssim(x.cuda(), y.cuda(), data_range=1, size_average=False))/2
+
+        # print('SSIM Mean: ', ssim_mat.mean().numpy())
+        # print('SSIM Top 1 Mean: ', torch.topk(ssim_mat, k=1).values.mean().numpy())
+        # print('SSIM Top 5 Mean: ', torch.topk(ssim_mat, k=5).values.mean().numpy())
+        # print('SSIM Top 10 Mean: ', torch.topk(ssim_mat, k=10).values.mean().numpy())
+        # print('SSIM Top 20 Mean: ', torch.topk(ssim_mat, k=20).values.mean().numpy())
+        print('SSIM Top 50 Mean: ', torch.topk(ssim_mat, k=50).values.mean().numpy())
+
+    if args.novelty_score:
+        anomaly_scores = []
+        for i in range(0, 1000, 100):
+            images = gw.render_image_batch(list(range(i,i+100)))
+            scores = ad.predict_anomaly_scores(images)
+            anomaly_scores.append(scores)
+
+        anomaly_scores = np.concatenate(anomaly_scores)
+        print('Average Novelty Score', anomaly_scores.mean())
+
+        

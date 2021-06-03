@@ -161,7 +161,7 @@ class AnomalyDetector(object):
     def load_train_features(self):
 
         # extract train set features
-        train_feature_filepath = os.path.join(self.cache_path, 'temp', 'train_%s.pkl' % self.name)
+        train_feature_filepath = os.path.join(self.cache_path, 'temp', 'train_%s.pkl' % os.path.basename(os.path.normpath(self.data_path)))
         if not os.path.exists(train_feature_filepath):
             for x in tqdm(self.train_dataloader, '| feature extraction | train |'):
                 # model prediction

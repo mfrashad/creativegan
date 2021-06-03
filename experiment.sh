@@ -8,7 +8,9 @@ do
                        --copy_id $frame \
                        --paste_id 7 \
                        --context_ids 7-12 \
-                       --layernum 6
+                       --layernum 6 \
+                       --ssim \
+                       --novelty_score \
 done
 
 for handle in 580 811 576
@@ -21,5 +23,7 @@ do
                        --copy_id $handle \
                        --paste_id 7 \
                        --context_ids 7-12 \
-                       --layernum 8
+                       --layernum 8 \
+                       --ssim \
+                       --novelty_score
 done
