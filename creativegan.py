@@ -32,9 +32,9 @@ def _parse_num_range(s):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', type=str, required=True, 'Name of experiment')
-parser.add_argument('--model_path', type=str, required=True, path='Path to Stylegan model')
-parser.add_argument('--model_size', type=int, default=512, 'GAN model output size')
+parser.add_argument('--name', type=str, required=True, help='Name of experiment')
+parser.add_argument('--model_path', type=str, required=True, help='Path to Stylegan model')
+parser.add_argument('--model_size', type=int, default=512, help='GAN model output size')
 parser.add_argument('--truncation', type=float, default=0.5, help="Value for truncation trick in Stylegan")
 
 parser.add_argument('--seg_model_path', type=str, required=True, help="Path to segmentation model")
