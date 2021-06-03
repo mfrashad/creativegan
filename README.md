@@ -53,6 +53,12 @@ python creativegan.py --name "bike" \
                        --layernum 6
 ``` 
 
+
+For more optional arguments, refer to help command.
+```
+python creativegan.py --help
+```
+
 # Experiment
 Run the experiment script.
 ```

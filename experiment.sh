@@ -1,3 +1,6 @@
+#!/bin/bash
+python top_novel_bikes.py
+
 for frame in 907 728 348 960
 do
 	python creativegan.py --name "bike" \
@@ -10,7 +13,7 @@ do
                        --context_ids 7-12 \
                        --layernum 6 \
                        --ssim \
-                       --novelty_score \
+                       --novelty_score
 done
 
 for handle in 580 811 576
