@@ -86,3 +86,6 @@ This code is licensed under the MIT license. Feel free to use all or portions fo
       archivePrefix={arXiv},
       primaryClass={cs.LG}
     }
+
+
+Part of the code is adapted from [David Bau's repository](https://github.com/davidbau/rewriting).
